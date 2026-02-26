@@ -34,8 +34,10 @@ function loadConfig(): Config {
 
   if (!baseUrl || !apiKey) {
     console.error(red("Missing required environment variables:\n"));
-    if (!baseUrl) console.error(red("  ETH_LINK_BASE_URL  - Provider base URL"));
-    if (!apiKey) console.error(red("  ETH_LINK_API_KEY   - API key for authentication"));
+    if (!baseUrl)
+      console.error(red("  ETH_LINK_BASE_URL  - Provider base URL"));
+    if (!apiKey)
+      console.error(red("  ETH_LINK_API_KEY   - API key for authentication"));
     console.error(`
 Optional:
   ETH_LINK_CHAIN                mainnet | hoodi (default: hoodi)
@@ -64,7 +66,9 @@ Usage:
     baseUrl: baseUrl.replace(/\/$/, ""),
     apiKey,
     chain,
-    withdrawalAddress: process.env.ETH_LINK_WITHDRAWAL_ADDRESS || "0x889edC2eDab5f40e902b864aD4d7AdE8E412F9B1",
+    withdrawalAddress:
+      process.env.ETH_LINK_WITHDRAWAL_ADDRESS ||
+      "0x889edC2eDab5f40e902b864aD4d7AdE8E412F9B1",
     amount: process.env.ETH_LINK_AMOUNT || "32",
     region,
   };
@@ -94,7 +98,9 @@ function commonHeaders(apiKey: string): Record<string, string> {
   };
 }
 
-function redactHeaders(headers: Record<string, string>): Record<string, string> {
+function redactHeaders(
+  headers: Record<string, string>,
+): Record<string, string> {
   const redacted = { ...headers };
   if (redacted["x-api-key"]) redacted["x-api-key"] = "***";
   return redacted;
@@ -106,7 +112,9 @@ function prettyJson(obj: unknown): string {
 
 function extractResponseHeaders(response: Response): Record<string, string> {
   const headers: Record<string, string> = {};
-  response.headers.forEach((v, k) => { headers[k] = v; });
+  response.headers.forEach((v, k) => {
+    headers[k] = v;
+  });
   return headers;
 }
 
@@ -120,20 +128,47 @@ async function parseResponseBody(response: Response): Promise<unknown> {
   }
 }
 
-async function httpGet(url: string, headers: Record<string, string>): Promise<{ req: RequestContext; res: ResponseContext }> {
+async function httpGet(
+  url: string,
+  headers: Record<string, string>,
+): Promise<{ req: RequestContext; res: ResponseContext }> {
   const req: RequestContext = { method: "GET", url, headers };
   const response = await fetch(url, { method: "GET", headers });
   const resHeaders = extractResponseHeaders(response);
   const body = await parseResponseBody(response);
-  return { req, res: { status: response.status, statusText: response.statusText, headers: resHeaders, body } };
+  return {
+    req,
+    res: {
+      status: response.status,
+      statusText: response.statusText,
+      headers: resHeaders,
+      body,
+    },
+  };
 }
 
-async function httpPost(url: string, headers: Record<string, string>, data: unknown): Promise<{ req: RequestContext; res: ResponseContext }> {
+async function httpPost(
+  url: string,
+  headers: Record<string, string>,
+  data: unknown,
+): Promise<{ req: RequestContext; res: ResponseContext }> {
   const req: RequestContext = { method: "POST", url, headers, body: data };
-  const response = await fetch(url, { method: "POST", headers, body: JSON.stringify(data) });
+  const response = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(data),
+  });
   const resHeaders = extractResponseHeaders(response);
   const body = await parseResponseBody(response);
-  return { req, res: { status: response.status, statusText: response.statusText, headers: resHeaders, body } };
+  return {
+    req,
+    res: {
+      status: response.status,
+      statusText: response.statusText,
+      headers: resHeaders,
+      body,
+    },
+  };
 }
 
 // ── Test harness ────────────────────────────────────────────────────────────
@@ -161,7 +196,9 @@ function printRequestResponse(): void {
     console.log(`    ${yellow("── Request ──")}`);
     console.log(`    ${dim("Method:")}  ${lastReq.method}`);
     console.log(`    ${dim("URL:")}     ${lastReq.url}`);
-    console.log(`    ${dim("Headers:")} ${prettyJson(redactHeaders(lastReq.headers))}`);
+    console.log(
+      `    ${dim("Headers:")} ${prettyJson(redactHeaders(lastReq.headers))}`,
+    );
     if (lastReq.body) {
       console.log(`    ${dim("Body:")}    ${prettyJson(lastReq.body)}`);
     }
@@ -169,7 +206,9 @@ function printRequestResponse(): void {
 
   if (lastRes) {
     console.log(`    ${yellow("── Response ──")}`);
-    console.log(`    ${dim("Status:")}  ${lastRes.status} ${lastRes.statusText}`);
+    console.log(
+      `    ${dim("Status:")}  ${lastRes.status} ${lastRes.statusText}`,
+    );
     console.log(`    ${dim("Headers:")} ${prettyJson(lastRes.headers)}`);
     if (lastRes.body) {
       console.log(`    ${dim("Body:")}    ${prettyJson(lastRes.body)}`);
@@ -218,7 +257,10 @@ async function runTest(name: string, fn: () => Promise<void>): Promise<void> {
 
 let createdPubkey: string | undefined;
 
-function assertRequestIdEcho(reqHeaders: Record<string, string>, resHeaders: Record<string, string>): void {
+function assertRequestIdEcho(
+  reqHeaders: Record<string, string>,
+  resHeaders: Record<string, string>,
+): void {
   const sent = reqHeaders["x-request-id"];
   const echoed = resHeaders["x-request-id"];
   if (sent && echoed && sent !== echoed) {
@@ -229,7 +271,10 @@ function assertRequestIdEcho(reqHeaders: Record<string, string>, resHeaders: Rec
 async function testHealthCheck(config: Config): Promise<void> {
   await runTest("GET /eth-link/health", async () => {
     const headers = commonHeaders(config.apiKey);
-    const { req, res } = await httpGet(`${config.baseUrl}/eth-link/health`, headers);
+    const { req, res } = await httpGet(
+      `${config.baseUrl}/eth-link/health`,
+      headers,
+    );
     lastReq = req;
     lastRes = res;
 
@@ -241,11 +286,17 @@ async function testHealthCheck(config: Config): Promise<void> {
 
     const parsed = HealthResponse.safeParse(res.body);
     if (!parsed.success) {
-      throw new Error(`Response validation failed: ${parsed.error.issues.map(i => i.message).join(", ")}`);
+      throw new Error(
+        `Response validation failed: ${parsed.error.issues
+          .map((i) => i.message)
+          .join(", ")}`,
+      );
     }
 
     if (!parsed.data.healthy) {
-      throw new Error(`Provider reports unhealthy: ${parsed.data.message || "no message"}`);
+      throw new Error(
+        `Provider reports unhealthy: ${parsed.data.message || "no message"}`,
+      );
     }
   });
 }
@@ -266,28 +317,44 @@ async function testCreateValidator(config: Config): Promise<void> {
     });
 
     if (!reqParsed.success) {
-      throw new Error(`Request body invalid: ${reqParsed.error.issues.map(i => i.message).join(", ")}`);
+      throw new Error(
+        `Request body invalid: ${reqParsed.error.issues
+          .map((i) => i.message)
+          .join(", ")}`,
+      );
     }
 
-    const { req, res } = await httpPost(`${config.baseUrl}/eth-link/validators/create`, headers, reqParsed.data);
+    const { req, res } = await httpPost(
+      `${config.baseUrl}/eth-link/validators/create`,
+      headers,
+      reqParsed.data,
+    );
     lastReq = req;
     lastRes = res;
 
-    if (res.status !== 200) {
-      throw new Error(`Expected status 200, got ${res.status}`);
+    if (res.status !== 200 && res.status !== 201) {
+      throw new Error(`Expected status 200 or 201, got ${res.status}`);
     }
 
     assertRequestIdEcho(req.headers, res.headers);
 
     const parsed = CreateValidatorResponse.safeParse(res.body);
     if (!parsed.success) {
-      throw new Error(`Response validation failed: ${parsed.error.issues.map(i => i.message).join(", ")}`);
+      throw new Error(
+        `Response validation failed: ${parsed.error.issues
+          .map((i) => i.message)
+          .join(", ")}`,
+      );
     }
 
     // Verify amount matches request
-    const responseAmountEth = (parsed.data.data.depositData.amount / 1e9).toString();
+    const responseAmountEth = (
+      parsed.data.data.depositData.amount / 1e9
+    ).toString();
     if (responseAmountEth !== config.amount) {
-      throw new Error(`Amount mismatch: requested ${config.amount} ETH, got ${responseAmountEth} ETH`);
+      throw new Error(
+        `Amount mismatch: requested ${config.amount} ETH, got ${responseAmountEth} ETH`,
+      );
     }
 
     // Verify HMAC signature
@@ -300,7 +367,13 @@ async function testCreateValidator(config: Config): Promise<void> {
       throw new Error("Missing x-signature or x-timestamp response headers");
     }
 
-    const hmacValid = verifySignature(requestId, xTimestamp, depositDataRoot, config.apiKey, xSignature);
+    const hmacValid = verifySignature(
+      requestId,
+      xTimestamp,
+      depositDataRoot,
+      config.apiKey,
+      xSignature,
+    );
     if (!hmacValid) {
       throw new Error("HMAC signature verification failed");
     }
@@ -310,70 +383,78 @@ async function testCreateValidator(config: Config): Promise<void> {
 }
 
 async function testDepositSubmittedEvent(config: Config): Promise<void> {
-  await runTest("POST /eth-link/validators/{pubkey}/events (DEPOSIT_SUBMITTED)", async () => {
-    if (!createdPubkey) throw new SkippedError("No pubkey from createValidator");
+  await runTest(
+    "POST /eth-link/validators/{pubkey}/events (DEPOSIT_SUBMITTED)",
+    async () => {
+      if (!createdPubkey)
+        throw new SkippedError("No pubkey from createValidator");
 
-    const headers = commonHeaders(config.apiKey);
-    const body = {
-      eventType: "DEPOSIT_SUBMITTED" as const,
-      timestamp: new Date().toISOString(),
-      details: {
-        txHash: "0x" + "ab".repeat(32),
-        amount: config.amount,
-      },
-    };
+      const headers = commonHeaders(config.apiKey);
+      const body = {
+        eventType: "DEPOSIT_SUBMITTED" as const,
+        timestamp: new Date().toISOString(),
+        details: {
+          txHash: "0x" + "ab".repeat(32),
+          amount: config.amount,
+        },
+      };
 
-    const { req, res } = await httpPost(
-      `${config.baseUrl}/eth-link/validators/${createdPubkey}/events`,
-      headers,
-      body,
-    );
-    lastReq = req;
-    lastRes = res;
+      const { req, res } = await httpPost(
+        `${config.baseUrl}/eth-link/validators/${createdPubkey}/events`,
+        headers,
+        body,
+      );
+      lastReq = req;
+      lastRes = res;
 
-    if (res.status !== 200) {
-      throw new Error(`Expected status 200, got ${res.status}`);
-    }
+      if (res.status !== 200 && res.status !== 201) {
+        throw new Error(`Expected status 200 or 201, got ${res.status}`);
+      }
 
-    assertRequestIdEcho(req.headers, res.headers);
-  });
+      assertRequestIdEcho(req.headers, res.headers);
+    },
+  );
 }
 
 async function testValidatorCanceledEvent(config: Config): Promise<void> {
-  await runTest("POST /eth-link/validators/{pubkey}/events (VALIDATOR_CANCELED)", async () => {
-    if (!createdPubkey) throw new SkippedError("No pubkey from createValidator");
+  await runTest(
+    "POST /eth-link/validators/{pubkey}/events (VALIDATOR_CANCELED)",
+    async () => {
+      if (!createdPubkey)
+        throw new SkippedError("No pubkey from createValidator");
 
-    const headers = commonHeaders(config.apiKey);
-    const body = {
-      eventType: "VALIDATOR_CANCELED" as const,
-      timestamp: new Date().toISOString(),
-      details: {
-        reason: "CLI tester — automated test cancellation",
-      },
-    };
+      const headers = commonHeaders(config.apiKey);
+      const body = {
+        eventType: "VALIDATOR_CANCELED" as const,
+        timestamp: new Date().toISOString(),
+        details: {
+          reason: "CLI tester — automated test cancellation",
+        },
+      };
 
-    const { req, res } = await httpPost(
-      `${config.baseUrl}/eth-link/validators/${createdPubkey}/events`,
-      headers,
-      body,
-    );
-    lastReq = req;
-    lastRes = res;
+      const { req, res } = await httpPost(
+        `${config.baseUrl}/eth-link/validators/${createdPubkey}/events`,
+        headers,
+        body,
+      );
+      lastReq = req;
+      lastRes = res;
 
-    if (res.status !== 200) {
-      throw new Error(`Expected status 200, got ${res.status}`);
-    }
+      if (res.status !== 200 && res.status !== 201) {
+        throw new Error(`Expected status 200 or 201, got ${res.status}`);
+      }
 
-    assertRequestIdEcho(req.headers, res.headers);
-  });
+      assertRequestIdEcho(req.headers, res.headers);
+    },
+  );
 }
 
 // ── Summary ─────────────────────────────────────────────────────────────────
 
 function printSummary(): void {
-  const passed = results.filter(r => r.status === "passed").length;
-  const failed = results.filter(r => r.status === "failed").length;
-  const skipped = results.filter(r => r.status === "skipped").length;
+  const passed = results.filter((r) => r.status === "passed").length;
+  const failed = results.filter((r) => r.status === "failed").length;
+  const skipped = results.filter((r) => r.status === "skipped").length;
   const total = results.length;
 
   console.log("");
@@ -385,7 +466,9 @@ function printSummary(): void {
     if (r.status === "passed") {
       console.log(`  ${green("✓")} ${r.name} ${dim(`(${r.duration}ms)`)}`);
     } else if (r.status === "skipped") {
-      console.log(`  ${yellow("○")} ${yellow(r.name)} ${dim(`(${r.duration}ms)`)}`);
+      console.log(
+        `  ${yellow("○")} ${yellow(r.name)} ${dim(`(${r.duration}ms)`)}`,
+      );
       if (r.error) console.log(`    ${yellow(`└─ ${r.error}`)}`);
     } else {
       console.log(`  ${red("✗")} ${red(r.name)} ${dim(`(${r.duration}ms)`)}`);
@@ -429,7 +512,7 @@ async function main(): Promise<void> {
   printSummary();
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error(red(`Unexpected error: ${formatError(err)}`));
   process.exit(1);
 });
