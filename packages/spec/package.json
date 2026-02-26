@@ -1,0 +1,15 @@
+{
+  "name": "@fireblocks/eth-staking-eth-link-spec",
+  "version": "1.0.0",
+  "description": "OpenAPI specification for the Eth-Link protocol",
+  "main": "eth-link-spec.yaml",
+  "files": [
+    "eth-link-spec.yaml"
+  ],
+  "scripts": {
+    "build": "echo 'no build needed'",
+    "clean": "echo 'nothing to clean'",
+    "typecheck": "echo 'no types to check'"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,23 @@
+{
+  "name": "@fireblocks/eth-staking-eth-link-api-validator",
+  "version": "1.0.0",
+  "description": "HMAC utilities and header extraction for the Eth-Link protocol",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fireblocks/eth-staking-eth-link-types": "1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.0"
+  },
+  "license": "MIT"
+}

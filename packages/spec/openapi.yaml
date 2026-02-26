@@ -1,0 +1,457 @@
+openapi: 3.0.3
+info:
+  title: Eth-Link API
+  version: 0.0.9
+  description: |
+    Provider-agnostic API for enabling compounding ETH staking (post-Pectra).
+    
+    Eth-Link defines a minimal interface for creating compounding validators,
+    exchanging signed deposit data, and delivering validator lifecycle events.
+    
+    Only post-Pectra compounding validators (0x02 withdrawal credentials) are supported.
+  contact:
+    email: support@fireblocks.com
+
+servers:
+  - url: '{baseUrl}'
+    description: Provider-specific base URL
+    variables:
+      baseUrl:
+        default: https://api.provider.com/mainnet
+        description: Base URL configured for the provider (can include network identifier)
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /eth-link/validators/create:
+    post:
+      summary: Create New Validator
+      description: |
+        Creates a new compounding ETH validator and returns fully signed deposit data
+        that can be submitted to the Ethereum Deposit Contract.
+        
+        This endpoint requires HMAC-SHA256 response authentication.
+      operationId: createValidator
+      parameters:
+        - $ref: '#/components/parameters/RequestIdHeader'
+        - $ref: '#/components/parameters/ClientIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateValidatorRequest'
+            examples:
+              mainnet:
+                value:
+                  blockchain: mainnet
+                  withdrawalAddress: "0xE40F80618324C814cD444434670a44ba4583aE38"
+                  amount: "32"
+              hoodi:
+                value:
+                  blockchain: hoodi
+                  withdrawalAddress: "0xE40F80618324C814cD444434670a44ba4583aE38"
+                  region: eu
+                  amount: "32"
+      responses:
+        '200':
+          description: Validator created successfully
+          headers:
+            x-request-id:
+              $ref: '#/components/headers/RequestIdHeader'
+            x-timestamp:
+              description: Unix timestamp (seconds since epoch) when response was generated
+              required: true
+              schema:
+                type: string
+                example: "1706014800"
+            x-signature:
+              description: |
+                HMAC-SHA256 signature authenticating the response.
+                Calculated as: HMAC-SHA256(requestId:timestamp:depositDataRoot, apiKey)
+              required: true
+              schema:
+                type: string
+                pattern: '^[a-fA-F0-9]{64}$'
+                example: "a52454175a8516b7b2176379e06a9d7d5fa0702c38fc45e3ef63bf1a5746c0c0"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateValidatorResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /eth-link/validators/{pubkey}/events:
+    post:
+      summary: Send Validator Event
+      description: |
+        Sends a validator lifecycle event from the platform to the provider.
+        Used to notify about deposit submission or cancellation.
+      operationId: sendValidatorEvent
+      parameters:
+        - $ref: '#/components/parameters/RequestIdHeader'
+        - name: pubkey
+          in: path
+          required: true
+          description: Validator BLS public key (48 bytes, hex-encoded, 0x-prefixed)
+          schema:
+            type: string
+            pattern: '^0x[a-fA-F0-9]{96}$'
+            example: "0x8fc7b098767d6b45f431ac820f6884f6f74bbebee4e6f30456bbcf48a280248307a8260f2913a27c076f2f0c64c67aad"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidatorEventRequest'
+      responses:
+        '200':
+          description: Event received successfully
+          headers:
+            x-request-id:
+              $ref: '#/components/headers/RequestIdHeader'
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Empty object or may contain minimal metadata
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /eth-link/health:
+    get:
+      summary: Health Check
+      description: |
+        Verify that the provider's Eth-Link implementation is available and ready.
+        Polled approximately every 60 seconds.
+        
+        This endpoint does NOT require HMAC response authentication.
+      operationId: healthCheck
+      parameters:
+        - $ref: '#/components/parameters/RequestIdHeader'
+      responses:
+        '200':
+          description: Health status
+          headers:
+            x-request-id:
+              $ref: '#/components/headers/RequestIdHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: Provider-issued API key for authentication
+
+  parameters:
+    RequestIdHeader:
+      name: x-request-id
+      in: header
+      required: true
+      description: Unique request identifier (UUID format) for idempotency and tracing
+      schema:
+        type: string
+        format: uuid
+        example: "550e8400-e29b-41d4-a716-446655440000"
+    
+    ClientIdHeader:
+      name: x-client-id
+      in: header
+      required: true
+      description: End client identifier (UUID format) for tracking and analytics
+      schema:
+        type: string
+        format: uuid
+        example: "7f3e9a2b-4c1d-4e5f-9a8b-3c2d1e0f4a5b"
+
+  headers:
+    RequestIdHeader:
+      description: Echo of the request ID for traceability
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    CreateValidatorRequest:
+      type: object
+      required:
+        - blockchain
+        - withdrawalAddress
+        - amount
+      properties:
+        blockchain:
+          type: string
+          enum: [mainnet, hoodi]
+          description: Target Ethereum network
+          example: mainnet
+        withdrawalAddress:
+          type: string
+          pattern: '^0x[a-fA-F0-9]{40}$'
+          description: Ethereum address for validator exits (0x-prefixed, 40 hex chars)
+          example: "0xE40F80618324C814cD444434670a44ba4583aE38"
+        region:
+          type: string
+          enum: [us, eu]
+          description: Optional provider hosting region
+          example: eu
+        amount:
+          type: string
+          description: |
+            Amount in ETH (not gwei) for initial deposit.
+            String format allows decimal values.
+          example: "32"
+
+    CreateValidatorResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - depositData
+          properties:
+            depositData:
+              $ref: '#/components/schemas/DepositData'
+
+    DepositData:
+      type: object
+      description: Ethereum deposit contract data structure (post-Pectra)
+      required:
+        - pubkey
+        - withdrawalCredentials
+        - depositDataRoot
+        - signature
+        - amount
+      properties:
+        pubkey:
+          type: string
+          pattern: '^0x[a-fA-F0-9]{96}$'
+          description: BLS public key (48 bytes, hex-encoded)
+          example: "0x8fc7b098767d6b45f431ac820f6884f6f74bbebee4e6f30456bbcf48a280248307a8260f2913a27c076f2f0c64c67aad"
+        withdrawalCredentials:
+          type: string
+          pattern: '^02[a-fA-F0-9]{62}$'
+          description: Pectra withdrawal credentials (0x02... format, 32 bytes)
+          example: "020000000000000000000000e1f4acc0affb36a805474e3b6ab786738c6900a2"
+        depositDataRoot:
+          type: string
+          pattern: '^0x[a-fA-F0-9]{64}$'
+          description: |
+            SSZ Merkle root (32 bytes, hex-encoded).
+            This value is included in the HMAC signature for response authentication.
+          example: "0xfd997ecea9711498990181f0e3f8426b1c9528e61a8fbcc999db5fb3b3d6ca4b"
+        signature:
+          type: string
+          pattern: '^0x[a-fA-F0-9]{192}$'
+          description: BLS12-381 signature (96 bytes, hex-encoded)
+          example: "0x802bec470e333c380a0c530361e76cfa27f662a411d993a663aa080070601411..."
+        amount:
+          type: integer
+          description: Deposit amount in gwei (numeric integer)
+          example: 32000000000
+
+    ValidatorEventRequest:
+      type: object
+      required:
+        - eventType
+        - timestamp
+        - details
+      properties:
+        eventType:
+          type: string
+          enum: [DEPOSIT_SUBMITTED, VALIDATOR_CANCELED]
+          description: Validator lifecycle event type
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp (UTC) when the event occurred
+          example: "2025-01-22T14:30:00Z"
+        details:
+          type: object
+          description: Event-specific metadata
+          oneOf:
+            - $ref: '#/components/schemas/DepositSubmittedDetails'
+            - $ref: '#/components/schemas/ValidatorCanceledDetails'
+
+    DepositSubmittedDetails:
+      type: object
+      required:
+        - txHash
+        - amount
+      properties:
+        txHash:
+          type: string
+          pattern: '^0x[a-fA-F0-9]{64}$'
+          description: Transaction hash of the deposit
+          example: "0x4b5d...e80"
+      amount:
+          type: string
+          description: |
+              Deposited amount in ETH (not gwei).
+              String format allows decimal values.
+          example: "32"
+          
+    ValidatorCanceledDetails:
+      type: object
+      properties:
+        reason:
+          type: string
+          description: Optional cancellation reason
+          example: "USER_REQUEST"
+
+    HealthResponse:
+      type: object
+      required:
+        - healthy
+        - timestamp
+      properties:
+        healthy:
+          type: boolean
+          description: Whether provider is ready to accept requests
+          example: true
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when health was generated
+          example: "2025-01-22T14:30:00Z"
+        message:
+          type: string
+          description: Optional additional information
+          example: "Operating normally"
+
+    ErrorResponse:
+      type: object
+      required:
+        - message
+        - code
+      properties:
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Invalid validator public key format"
+        code:
+          type: string
+          enum:
+            - UNAUTHORIZED
+            - INVALID_REQUEST
+            - INVALID_ARGUMENT
+            - NOT_FOUND
+            - CONFLICT
+            - RATE_LIMITED
+            - DEPENDENCY_FAILURE
+            - INTERNAL_ERROR
+            - SERVICE_UNAVAILABLE
+          description: Machine-readable error code
+          example: "INVALID_ARGUMENT"
+
+  responses:
+    BadRequest:
+      description: Invalid or missing request fields
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalidRequest:
+              value:
+                message: "Missing required field: withdrawalAddress"
+                code: "INVALID_REQUEST"
+            invalidArgument:
+              value:
+                message: "Invalid validator public key format"
+                code: "INVALID_ARGUMENT"
+    
+    Unauthorized:
+      description: Authentication failure
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: "Unauthorized"
+            code: "UNAUTHORIZED"
+    
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: "Validator not found"
+            code: "NOT_FOUND"
+    
+    Conflict:
+      description: Request conflicts with current state
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: "Duplicate request ID with different payload"
+            code: "CONFLICT"
+    
+    RateLimited:
+      description: Too many requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: "Rate limit exceeded"
+            code: "RATE_LIMITED"
+    
+    InternalError:
+      description: Unexpected provider error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            internalError:
+              value:
+                message: "Internal server error"
+                code: "INTERNAL_ERROR"
+            dependencyFailure:
+              value:
+                message: "Signing service unavailable"
+                code: "DEPENDENCY_FAILURE"
+    
+    ServiceUnavailable:
+      description: Provider temporarily unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: "Service under maintenance"
+            code: "SERVICE_UNAVAILABLE"

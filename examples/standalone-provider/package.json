@@ -1,0 +1,23 @@
+{
+  "name": "eth-link-standalone-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Eth-Link provider using only validation package (no Express middleware)",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fireblocks/eth-staking-eth-link-types": "1.0.0",
+    "@fireblocks/eth-staking-eth-link-api-validator": "1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.9.0"
+  }
+}
