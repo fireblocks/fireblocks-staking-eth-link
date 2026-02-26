@@ -8,7 +8,8 @@
   "scripts": {
     "build": "yarn workspaces run build",
     "clean": "yarn workspaces run clean",
-    "typecheck": "yarn workspaces run typecheck"
+    "typecheck": "yarn workspaces run typecheck",
+    "validate": "ts-node packages/api-validator/src/cli.ts"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.0",

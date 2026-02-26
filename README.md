@@ -1,56 +1,30 @@
 # Eth-Link
 
-Provider-agnostic API for creating compounding ETH validators (post-Pectra).
+Reference implementation and example code for the Eth-Link protocol — a provider-agnostic API for creating compounding ETH validators (post-Pectra).
 
-Eth-Link defines a minimal interface that staking providers implement to integrate with the Eth-Link platform. This monorepo contains the specification, TypeScript SDK packages, and conformance tests.
+> **Note:** This is not an official SDK. The packages and examples in this repo are provided as reference implementations to help providers and clients integrate with the Eth-Link protocol.
 
 ## Packages
 
-| Package | npm | Description |
-|---------|-----|-------------|
-| [`@fireblocks/eth-staking-eth-link-spec`](packages/spec/) | — | OpenAPI 3.0 specification (source of truth) |
-| [`@fireblocks/eth-staking-eth-link-types`](packages/types/) | — | TypeScript type definitions |
-| [`@fireblocks/eth-staking-eth-link-api-validator`](packages/api-validator/) | — | Zod schemas + HMAC signing utilities |
-| [`@fireblocks/eth-staking-eth-link-server`](packages/server/) | — | Express middleware for providers |
-| [`@fireblocks/eth-staking-eth-link-testing`](packages/testing/) | — | Conformance test CLI |
+| Package | Description |
+|---------|-------------|
+| [`@fireblocks/eth-staking-eth-link-spec`](packages/spec/) | OpenAPI 3.0 specification (source of truth) |
+| [`@fireblocks/eth-staking-eth-link-types`](packages/types/) | Zod schemas + TypeScript types |
+| [`@fireblocks/eth-staking-eth-link-api-validator`](packages/api-validator/) | CLI tool for testing provider endpoints + HMAC utilities |
+| [`@fireblocks/eth-staking-eth-link-server`](packages/server/) | Express middleware for providers |
 
-## Quick Start
-
-### For Providers (implementing Eth-Link)
+## Validate a Provider
 
 ```bash
-yarn add @fireblocks/eth-staking-eth-link-server @fireblocks/eth-staking-eth-link-types express
+ETH_LINK_BASE_URL=http://localhost:3000 ETH_LINK_API_KEY=your-key yarn validate
 ```
 
-```typescript
-import express from "express";
-import { createEthLinkRouter } from "@fireblocks/eth-staking-eth-link-server";
+## OpenAPI Spec
 
-const app = express();
+The source-of-truth specification lives in [`packages/spec/`](packages/spec/). Reference it directly in your OpenAPI tooling:
 
-app.use(createEthLinkRouter({
-  apiKey: process.env.API_KEY!,
-  provider: {
-    async createValidator(request, clientId) {
-      // Generate BLS keys, sign deposit data, return it
-      return { data: { depositData: { pubkey, withdrawalCredentials, signature, depositDataRoot, amount } } };
-    },
-    async onValidatorEvent(pubkey, event) {
-      // Handle DEPOSIT_SUBMITTED / VALIDATOR_CANCELED
-    },
-    async healthCheck() {
-      return { healthy: true, timestamp: new Date().toISOString() };
-    },
-  },
-}));
-
-app.listen(3000);
-```
-
-### Run Conformance Tests
-
-```bash
-npx @fireblocks/eth-staking-eth-link-testing --url http://localhost:3000 --api-key your-key
+```yaml
+$ref: "node_modules/@fireblocks/eth-staking-eth-link-spec/eth-link-spec.yaml"
 ```
 
 ## Endpoints
@@ -60,13 +34,6 @@ npx @fireblocks/eth-staking-eth-link-testing --url http://localhost:3000 --api-k
 | `POST` | `/eth-link/validators/create` | Create a compounding validator, return signed deposit data |
 | `POST` | `/eth-link/validators/{pubkey}/events` | Receive validator lifecycle events |
 | `GET` | `/eth-link/health` | Health check (polled every ~60s) |
-
-## Documentation
-
-- [Integration Guide](docs/integration-guide.md) — Step-by-step onboarding
-- [Security](docs/security.md) — HMAC signing, API keys, idempotency
-- [Deposit Data](docs/deposit-data.md) — BLS keys, SSZ, 0x02 credentials
-- [Troubleshooting](docs/troubleshooting.md) — Common issues and fixes
 
 ## Examples
 
@@ -82,11 +49,11 @@ yarn install
 # Build all packages
 yarn build
 
-# Run tests
-yarn test
-
 # Type check
 yarn typecheck
+
+# Validate a running provider
+ETH_LINK_BASE_URL=http://localhost:3000 ETH_LINK_API_KEY=dev-api-key-for-testing yarn validate
 ```
 
 ## License

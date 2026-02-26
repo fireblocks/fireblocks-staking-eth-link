@@ -1,9 +1,12 @@
 {
   "name": "@fireblocks/eth-staking-eth-link-api-validator",
   "version": "1.0.0",
-  "description": "HMAC utilities and header extraction for the Eth-Link protocol",
+  "description": "CLI tool for testing Eth-Link provider endpoints",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "eth-link-api-validator": "dist/cli.js"
+  },
   "files": [
     "dist"
   ],

@@ -1,5 +1,7 @@
 # Standalone Provider Example
 
+> Reference implementation — not an official SDK. Use as a starting point for your own provider.
+
 Eth-Link provider using only Node.js `http` module + `@fireblocks/eth-staking-eth-link-api-validator`.
 
 No Express dependency — shows how to implement the protocol with any framework.
@@ -11,10 +13,11 @@ yarn install
 yarn dev
 ```
 
-## Test with the conformance suite
+## Validate with the API tester
 
 ```bash
-npx @fireblocks/eth-staking-eth-link-testing --url http://localhost:3001 --api-key dev-api-key-for-testing
+# In another terminal, from the repo root:
+ETH_LINK_BASE_URL=http://localhost:3001 ETH_LINK_API_KEY=dev-api-key-for-testing yarn validate
 ```
 
 ## When to use this approach
