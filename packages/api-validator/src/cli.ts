@@ -68,7 +68,7 @@ Usage:
     chain,
     withdrawalAddress:
       process.env.ETH_LINK_WITHDRAWAL_ADDRESS ||
-      "0x889edC2eDab5f40e902b864aD4d7AdE8E412F9B1",
+      "0x889edC2eDab5f40e902b864aD4d7AdE8E412F9B1", // mock random address
     amount: process.env.ETH_LINK_AMOUNT || "32",
     region,
   };
