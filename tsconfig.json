@@ -1,0 +1,10 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/types" },
+    { "path": "packages/api-validator" },
+    { "path": "packages/server" },
+    { "path": "examples/express-provider" },
+    { "path": "examples/standalone-provider" }
+  ]
+}

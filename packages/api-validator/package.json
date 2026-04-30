@@ -11,9 +11,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -b",
     "clean": "rm -rf dist",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
     "@fireblocks/eth-staking-eth-link-types": "1.0.0"
