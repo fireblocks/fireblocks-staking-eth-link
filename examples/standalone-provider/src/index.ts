@@ -114,7 +114,14 @@ const server = http.createServer(async (req, res) => {
     }
 
     const raw = await readBody(req);
-    const parsed = CreateValidatorRequest.safeParse(JSON.parse(raw));
+    let rawBody: unknown;
+    try {
+      rawBody = JSON.parse(raw);
+    } catch {
+      sendError(res, 400, "INVALID_REQUEST", "Malformed JSON body", requestId);
+      return;
+    }
+    const parsed = CreateValidatorRequest.safeParse(rawBody);
     if (!parsed.success) {
       sendError(
         res,
@@ -183,7 +190,14 @@ const server = http.createServer(async (req, res) => {
     }
 
     const raw = await readBody(req);
-    const parsed = ValidatorEventRequest.safeParse(JSON.parse(raw));
+    let rawBody: unknown;
+    try {
+      rawBody = JSON.parse(raw);
+    } catch {
+      sendError(res, 400, "INVALID_REQUEST", "Malformed JSON body", requestId);
+      return;
+    }
+    const parsed = ValidatorEventRequest.safeParse(rawBody);
     if (!parsed.success) {
       sendError(
         res,

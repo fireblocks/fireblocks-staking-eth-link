@@ -10,7 +10,7 @@ export const BLSPublicKey = z.string().regex(/^0x[a-fA-F0-9]{96}$/, {
   message: "Must be a valid BLS public key (0x followed by 96 hex characters)",
 });
 
-/** Pectra withdrawal credentials: 32 bytes starting with 0x02 */
+/** Pectra withdrawal credentials: 32 bytes starting with 02 (optional 0x prefix) */
 export const WithdrawalCredentials = z.string().regex(/^(0x)?02[a-fA-F0-9]{62}$/, {
   message: "Must be valid Pectra withdrawal credentials (02 or 0x02 followed by 62 hex characters)",
 });

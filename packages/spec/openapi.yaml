@@ -259,8 +259,8 @@ components:
           example: "0x8fc7b098767d6b45f431ac820f6884f6f74bbebee4e6f30456bbcf48a280248307a8260f2913a27c076f2f0c64c67aad"
         withdrawalCredentials:
           type: string
-          pattern: '^02[a-fA-F0-9]{62}$'
-          description: Pectra withdrawal credentials (0x02... format, 32 bytes)
+          pattern: '^(0x)?02[a-fA-F0-9]{62}$'
+          description: Pectra withdrawal credentials (02 or 0x02 prefix, 32 bytes)
           example: "020000000000000000000000e1f4acc0affb36a805474e3b6ab786738c6900a2"
         depositDataRoot:
           type: string
@@ -313,11 +313,11 @@ components:
           pattern: '^0x[a-fA-F0-9]{64}$'
           description: Transaction hash of the deposit
           example: "0x4b5d...e80"
-      amount:
+        amount:
           type: string
           description: |
-              Deposited amount in ETH (not gwei).
-              String format allows decimal values.
+            Deposited amount in ETH (not gwei).
+            String format allows decimal values.
           example: "32"
           
     ValidatorCanceledDetails:

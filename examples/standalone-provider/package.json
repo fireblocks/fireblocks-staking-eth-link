@@ -5,11 +5,11 @@
   "description": "Eth-Link provider using only validation package (no Express middleware)",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -b",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
     "clean": "rm -rf dist",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
     "@fireblocks/eth-staking-eth-link-types": "1.0.0",

@@ -6,9 +6,9 @@
     "examples/*"
   ],
   "scripts": {
-    "build": "yarn workspaces run build",
+    "build": "tsc -b",
     "clean": "yarn workspaces run clean",
-    "typecheck": "yarn workspaces run typecheck",
+    "typecheck": "tsc -b --noEmit",
     "validate": "ts-node packages/api-validator/src/cli.ts"
   },
   "devDependencies": {
