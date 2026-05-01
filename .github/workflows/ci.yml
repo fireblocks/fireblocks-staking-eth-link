@@ -28,8 +28,5 @@ jobs:
       - name: Build all packages
         run: yarn build
 
-      # - name: Run tests
-      #   run: yarn test
-
       - name: Type check
         run: yarn typecheck
