@@ -14,10 +14,21 @@ export const ValidatorCanceledDetails = z.object({
 });
 export type ValidatorCanceledDetails = z.infer<typeof ValidatorCanceledDetails>;
 
-/** Schema for POST /eth-link/validators/{pubkey}/events request body */
-export const ValidatorEventRequest = z.object({
-  eventType: z.enum(["DEPOSIT_SUBMITTED", "VALIDATOR_CANCELED"]),
+const DepositSubmittedEvent = z.object({
+  eventType: z.literal("DEPOSIT_SUBMITTED"),
   timestamp: z.string().datetime(),
-  details: z.union([DepositSubmittedDetails, ValidatorCanceledDetails]),
+  details: DepositSubmittedDetails,
 });
+
+const ValidatorCanceledEvent = z.object({
+  eventType: z.literal("VALIDATOR_CANCELED"),
+  timestamp: z.string().datetime(),
+  details: ValidatorCanceledDetails,
+});
+
+/** Schema for POST /eth-link/validators/{pubkey}/events request body */
+export const ValidatorEventRequest = z.discriminatedUnion("eventType", [
+  DepositSubmittedEvent,
+  ValidatorCanceledEvent,
+]);
 export type ValidatorEventRequest = z.infer<typeof ValidatorEventRequest>;

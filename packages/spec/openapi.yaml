@@ -313,11 +313,11 @@ components:
           pattern: '^0x[a-fA-F0-9]{64}$'
           description: Transaction hash of the deposit
           example: "0x4b5d...e80"
-      amount:
+        amount:
           type: string
           description: |
-              Deposited amount in ETH (not gwei).
-              String format allows decimal values.
+            Deposited amount in ETH (not gwei).
+            String format allows decimal values.
           example: "32"
           
     ValidatorCanceledDetails:

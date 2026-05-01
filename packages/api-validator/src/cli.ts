@@ -263,7 +263,11 @@ function assertRequestIdEcho(
 ): void {
   const sent = reqHeaders["x-request-id"];
   const echoed = resHeaders["x-request-id"];
-  if (sent && echoed && sent !== echoed) {
+  if (!sent) return;
+  if (!echoed) {
+    throw new Error(`Response missing x-request-id header (sent ${sent})`);
+  }
+  if (sent !== echoed) {
     throw new Error(`Request ID mismatch: sent ${sent}, got ${echoed}`);
   }
 }
